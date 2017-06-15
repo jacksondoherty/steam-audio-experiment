@@ -458,6 +458,10 @@ PlayerSettings:
   XboxOnePersistentLocalStorageSize: 0
   vrEditorSettings: {}
   cloudServicesEnabled:
+    Build: 0
+    Collab: 0
+    ErrorHub: 0
+    Hub: 0
     UNet: 1
   cloudProjectId: f47f8056-0333-4aaf-ad65-455f1fe3b679
   projectName: SteamAudioExperiments
