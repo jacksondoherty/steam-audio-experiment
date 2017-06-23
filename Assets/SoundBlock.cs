@@ -6,8 +6,7 @@ using VRTK;
 public class SoundBlock : VRTK_InteractableObject {
 
     private AudioSource sound;
-    // todo: perhaps save script instead
-    private GameObject lastTouching;
+    private GameObject pedalHolder;
     private float initialScaleX; // x, y, z all equal
     private float initialVolume;
 
@@ -22,24 +21,38 @@ public class SoundBlock : VRTK_InteractableObject {
     protected override void Update() {
         base.Update();
 
+        // volume
+        float scaleDelta = transform.localScale.x / initialScaleX;
+        sound.volume = initialVolume * scaleDelta * scaleDelta;
+
         // pedal
-        if (lastTouching) {
-            VRTK_ControllerEvents script = lastTouching.GetComponent<VRTK_ControllerEvents>();
-            if (!script.gripPressed) {
+        if (pedalHolder) {
+            VRTK_ControllerEvents eventsScript = pedalHolder.GetComponent<VRTK_ControllerEvents>();
+            if (!eventsScript.gripPressed) {
                 sound.Stop();
-                lastTouching = null;
+                pedalHolder = null;
+            } else {
+                // pedal rumble
+                rumble(pedalHolder, 0.05f*scaleDelta);
             }
         }
 
-        // volume
-        float scaleDelta = transform.localScale.x / initialScaleX;
-        sound.volume = initialVolume * scaleDelta*scaleDelta;
+        // touching rumble
+        foreach (GameObject controller in touchingObjects) {
+            rumble(controller, 0.05f*scaleDelta);
+        }
+    }
+
+    private void rumble(GameObject controller, float strength) {
+        VRTK_ControllerActions actionsScript = controller.GetComponent<VRTK_ControllerActions>();
+        actionsScript.TriggerHapticPulse(strength);
     }
 
     // block hit
     public override void StartTouching(GameObject currentTouchingObject) {
         base.StartTouching(currentTouchingObject);
 
+        pedalHolder = null;
         if (touchingObjects.Count == 1) {
             sound.Play();
         }
@@ -50,7 +63,8 @@ public class SoundBlock : VRTK_InteractableObject {
         base.StopTouching(previousTouchingObject);
         
         if (touchingObjects.Count == 0) {
-            lastTouching = previousTouchingObject;
+            pedalHolder = previousTouchingObject;
+            // handle audio stop in update
         }
     }
 
